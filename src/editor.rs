@@ -1,5 +1,5 @@
-use std::io;
 use std::io::stdout;
+use std::io::{self, Write};
 use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
@@ -15,11 +15,14 @@ impl Editor {
     pub fn run(&mut self) {
         let _stdout = stdout().into_raw_mode().unwrap();
         loop {
-            if let Err(ref err) = self.process_keypress() {
+            if let Err(ref err) = self.refresh_screen() {
                 die(err);
             }
             if self.should_quit {
                 break;
+            }
+            if let Err(ref err) = self.process_keypress() {
+                die(err);
             }
         }
     }
@@ -38,6 +41,11 @@ impl Editor {
             _ => (),
         }
         Ok(())
+    }
+
+    fn refresh_screen(&self) -> Result<(), std::io::Error> {
+        print!("{}", termion::clear::All);
+        io::stdout().flush()
     }
 }
 
