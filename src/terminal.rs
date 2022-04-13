@@ -1,9 +1,9 @@
+use crate::Result;
 use std::io;
 use std::io::{stdout, Write};
 use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::{IntoRawMode, RawTerminal};
-
 pub struct Size {
     pub width: u16,
     pub height: u16,
@@ -15,7 +15,7 @@ pub struct Terminal {
 }
 
 impl Terminal {
-    pub fn default() -> Result<Self, std::io::Error> {
+    pub fn default() -> Result<Self> {
         let size = termion::terminal_size()?;
         Ok(Self {
             size: Size {
@@ -39,15 +39,23 @@ impl Terminal {
         print!("{}", termion::cursor::Goto(x, y));
     }
 
-    pub fn flush_stdout() -> Result<(), std::io::Error> {
+    pub fn flush_stdout() -> Result<()> {
         io::stdout().flush()
     }
 
-    pub fn read_key() -> Result<Key, std::io::Error> {
+    pub fn read_key() -> Result<Key> {
         loop {
             if let Some(key) = io::stdin().lock().keys().next() {
                 return key;
             }
         }
+    }
+
+    pub fn cursor_hide() {
+        print!("{}", termion::cursor::Hide);
+    }
+
+    pub fn cursor_show() {
+        print!("{}", termion::cursor::Show);
     }
 }

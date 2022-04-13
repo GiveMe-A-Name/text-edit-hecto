@@ -1,3 +1,4 @@
+use crate::Result;
 use crate::Terminal;
 use termion::event::Key;
 
@@ -27,23 +28,17 @@ impl Editor {
         }
     }
 
-    fn process_keypress(&mut self) -> Result<(), std::io::Error> {
+    fn process_keypress(&mut self) -> Result<()> {
         let pressed_key = Terminal::read_key()?;
         match pressed_key {
-            Key::Char(c) => {
-                if c.is_control() {
-                    println!("{}\r", c as u8);
-                } else {
-                    println!("{} ({})\r", c as u8, c);
-                }
-            }
             Key::Ctrl('q') => self.should_quit = true,
             _ => (),
         }
         Ok(())
     }
 
-    fn refresh_screen(&self) -> Result<(), std::io::Error> {
+    fn refresh_screen(&self) -> Result<()> {
+        Terminal::cursor_hide();
         Terminal::clear_screen();
         Terminal::cursor_position(0, 0);
 
@@ -54,11 +49,13 @@ impl Editor {
             Terminal::cursor_position(0, 0);
         }
 
+        Terminal::cursor_show();
         Terminal::flush_stdout()
     }
 
     fn draw_rows(&self) {
-        for _ in 0..self.terminal.size().height {
+        let height = self.terminal.size().height;
+        for _ in 0..height - 1 {
             println!("~\r");
         }
     }
