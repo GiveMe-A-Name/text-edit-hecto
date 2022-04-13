@@ -47,8 +47,8 @@ impl Editor {
             Terminal::clear_screen();
             println!("Goodbye!\r");
         } else {
-            Terminal::cursor_position(0, 0);
             self.draw_rows();
+            Terminal::cursor_position(0, 0);
         }
 
         Terminal::cursor_show();
@@ -56,9 +56,9 @@ impl Editor {
     }
 
     fn draw_rows(&self) {
-        Terminal::clear_current_line();
         let height = self.terminal.size().height;
         for row in 0..height - 1 {
+            Terminal::clear_current_line();
             if row == height / 3 {
                 self.draw_welcome();
             } else {
