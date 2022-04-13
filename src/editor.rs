@@ -2,6 +2,8 @@ use crate::Result;
 use crate::Terminal;
 use termion::event::Key;
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 pub struct Editor {
     should_quit: bool,
     terminal: Terminal,
@@ -39,14 +41,14 @@ impl Editor {
 
     fn refresh_screen(&self) -> Result<()> {
         Terminal::cursor_hide();
-        Terminal::clear_screen();
         Terminal::cursor_position(0, 0);
 
         if self.should_quit {
+            Terminal::clear_screen();
             println!("Goodbye!\r");
         } else {
-            self.draw_rows();
             Terminal::cursor_position(0, 0);
+            self.draw_rows();
         }
 
         Terminal::cursor_show();
@@ -54,10 +56,26 @@ impl Editor {
     }
 
     fn draw_rows(&self) {
+        Terminal::clear_current_line();
         let height = self.terminal.size().height;
-        for _ in 0..height - 1 {
-            println!("~\r");
+        for row in 0..height - 1 {
+            if row == height / 3 {
+                self.draw_welcome();
+            } else {
+                println!("~\r");
+            }
         }
+    }
+
+    fn draw_welcome(&self) {
+        let mut welcome_message = format!("Hecto edit -- version {}", VERSION);
+        let len = welcome_message.len();
+        let width = self.terminal.size().width as usize;
+        let padding = width.saturating_sub(len) / 2;
+        let whites = " ".repeat(padding.saturating_add(1));
+        welcome_message = format!("~{}{}", whites, welcome_message);
+        welcome_message.truncate(width);
+        println!("{}", welcome_message);
     }
 }
 
