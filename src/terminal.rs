@@ -1,3 +1,4 @@
+use crate::Position;
 use crate::Result;
 use std::io;
 use std::io::{stdout, Write};
@@ -33,7 +34,7 @@ impl Terminal {
         print!("{}", termion::clear::All);
     }
 
-    pub fn cursor_position(x: u16, y: u16) {
+    pub fn cursor_position(Position { x, y }: &Position) {
         let x = x.saturating_add(1);
         let y = y.saturating_add(1);
         print!("{}", termion::cursor::Goto(x, y));

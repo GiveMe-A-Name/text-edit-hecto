@@ -1,6 +1,7 @@
 mod editor;
 mod terminal;
 use editor::Editor;
+use editor::Position;
 use terminal::Terminal;
 
 pub type Error = std::io::Error;

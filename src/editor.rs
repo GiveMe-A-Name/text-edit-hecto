@@ -4,9 +4,15 @@ use termion::event::Key;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
+pub struct Position {
+    pub x: u16,
+    pub y: u16,
+}
+
 pub struct Editor {
     should_quit: bool,
     terminal: Terminal,
+    cursor_position: Position,
 }
 
 impl Editor {
@@ -14,6 +20,7 @@ impl Editor {
         Self {
             should_quit: false,
             terminal: Terminal::default().expect("Failed to initialize terminal"),
+            cursor_position: Position { x: 0, y: 0 },
         }
     }
     pub fn run(&mut self) {
@@ -34,6 +41,7 @@ impl Editor {
         let pressed_key = Terminal::read_key()?;
         match pressed_key {
             Key::Ctrl('q') => self.should_quit = true,
+            Key::Up | Key::Down | Key::Left | Key::Right => self.move_cursor(&pressed_key),
             _ => (),
         }
         Ok(())
@@ -41,14 +49,14 @@ impl Editor {
 
     fn refresh_screen(&self) -> Result<()> {
         Terminal::cursor_hide();
-        Terminal::cursor_position(0, 0);
+        Terminal::cursor_position(&Position { x: 0, y: 0 });
 
         if self.should_quit {
             Terminal::clear_screen();
             println!("Goodbye!\r");
         } else {
             self.draw_rows();
-            Terminal::cursor_position(0, 0);
+            Terminal::cursor_position(&self.cursor_position);
         }
 
         Terminal::cursor_show();
@@ -75,7 +83,19 @@ impl Editor {
         let whites = " ".repeat(padding.saturating_add(1));
         welcome_message = format!("~{}{}", whites, welcome_message);
         welcome_message.truncate(width);
-        println!("{}", welcome_message);
+        println!("{}\r", welcome_message);
+    }
+
+    fn move_cursor(&mut self, key: &Key) {
+        let Position { mut x, mut y } = self.cursor_position;
+        match key {
+            Key::Left => x = x.saturating_sub(1),
+            Key::Right => x = x.saturating_add(1),
+            Key::Up => y = y.saturating_sub(1),
+            Key::Down => y = y.saturating_add(1),
+            _ => (),
+        };
+        self.cursor_position = Position { x, y };
     }
 }
 
