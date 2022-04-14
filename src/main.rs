@@ -1,5 +1,8 @@
+mod document;
 mod editor;
 mod terminal;
+use document::Document;
+use document::Row;
 use editor::Editor;
 use editor::Position;
 use terminal::Terminal;
