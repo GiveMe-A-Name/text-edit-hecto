@@ -16,7 +16,14 @@ impl From<&str> for Row {
 impl Row {
     pub fn render(&self, start: usize, end: usize) -> String {
         let end = cmp::min(end, self.content.len());
+        let start = cmp::min(start, end);
         self.content.get(start..end).unwrap_or_default().to_string()
+    }
+    pub fn len(&self) -> usize {
+        self.content.len()
+    }
+    pub fn is_empty(&self) -> bool {
+        self.content.is_empty()
     }
 }
 
@@ -43,5 +50,8 @@ impl Document {
     }
     pub fn is_empty(&self) -> bool {
         self.rows.is_empty()
+    }
+    pub fn len(&self) -> usize {
+        self.rows.len()
     }
 }
