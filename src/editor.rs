@@ -15,6 +15,19 @@ pub struct Position {
     pub y: u16,
 }
 
+trait Draw {
+    fn refresh_screen(&self) -> Result<()>;
+    fn draw_rows(&self);
+    fn draw_row(&self, row: &Row);
+    fn draw_welcome(&self);
+}
+
+trait Handle {
+    fn process_keypress(&mut self) -> Result<()>;
+    fn move_cursor(&mut self, key: &Key);
+    fn scroll(&mut self);
+}
+
 pub struct Editor {
     should_quit: bool,
     terminal: Terminal,
@@ -23,54 +36,7 @@ pub struct Editor {
     offset: Position,
 }
 
-impl Editor {
-    pub fn default() -> Self {
-        let args = Args::parse();
-        let document = if let Some(filename) = args.file {
-            Document::open(&filename).unwrap_or_default()
-        } else {
-            Document::default()
-        };
-
-        Self {
-            should_quit: false,
-            terminal: Terminal::default().expect("Failed to initialize terminal"),
-            cursor_position: Position::default(),
-            document,
-            offset: Position::default(),
-        }
-    }
-    pub fn run(&mut self) {
-        loop {
-            if let Err(ref err) = self.refresh_screen() {
-                die(err);
-            }
-            if self.should_quit {
-                break;
-            }
-            if let Err(ref err) = self.process_keypress() {
-                die(err);
-            }
-        }
-    }
-
-    fn process_keypress(&mut self) -> Result<()> {
-        let pressed_key = Terminal::read_key()?;
-        match pressed_key {
-            Key::Ctrl('q') => self.should_quit = true,
-            Key::Up
-            | Key::Down
-            | Key::Left
-            | Key::Right
-            | Key::Home
-            | Key::End
-            | Key::PageDown
-            | Key::PageUp => self.move_cursor(&pressed_key),
-            _ => (),
-        }
-        Ok(())
-    }
-
+impl Draw for Editor {
     fn refresh_screen(&self) -> Result<()> {
         Terminal::cursor_hide();
         Terminal::cursor_position(&Position::default());
@@ -125,6 +91,25 @@ impl Editor {
         welcome_message.truncate(width);
         println!("{}\r", welcome_message);
     }
+}
+
+impl Handle for Editor {
+    fn process_keypress(&mut self) -> Result<()> {
+        let pressed_key = Terminal::read_key()?;
+        match pressed_key {
+            Key::Ctrl('q') => self.should_quit = true,
+            Key::Up
+            | Key::Down
+            | Key::Left
+            | Key::Right
+            | Key::Home
+            | Key::End
+            | Key::PageDown
+            | Key::PageUp => self.move_cursor(&pressed_key),
+            _ => (),
+        }
+        Ok(())
+    }
 
     fn move_cursor(&mut self, key: &Key) {
         let Position { mut x, mut y } = self.cursor_position;
@@ -173,6 +158,38 @@ impl Editor {
             offset.x = x;
         } else if x >= offset.x.saturating_add(width) {
             offset.x = x.saturating_sub(width).saturating_add(1);
+        }
+    }
+}
+
+impl Editor {
+    pub fn default() -> Self {
+        let args = Args::parse();
+        let document = if let Some(filename) = args.file {
+            Document::open(&filename).unwrap_or_default()
+        } else {
+            Document::default()
+        };
+
+        Self {
+            should_quit: false,
+            terminal: Terminal::default().expect("Failed to initialize terminal"),
+            cursor_position: Position::default(),
+            document,
+            offset: Position::default(),
+        }
+    }
+    pub fn run(&mut self) {
+        loop {
+            if let Err(ref err) = self.refresh_screen() {
+                die(err);
+            }
+            if self.should_quit {
+                break;
+            }
+            if let Err(ref err) = self.process_keypress() {
+                die(err);
+            }
         }
     }
 }
