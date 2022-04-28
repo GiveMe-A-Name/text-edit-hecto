@@ -1,7 +1,9 @@
+use crate::Args;
 use crate::Document;
 use crate::Result;
 use crate::Row;
 use crate::Terminal;
+use clap::StructOpt;
 use std::env;
 use termion::event::Key;
 
@@ -23,10 +25,9 @@ pub struct Editor {
 
 impl Editor {
     pub fn default() -> Self {
-        let args: Vec<String> = env::args().collect();
-        let document = if args.len() > 1 {
-            let filename = &args[1];
-            Document::open(filename).unwrap_or_default()
+        let args = Args::parse();
+        let document = if let Some(filename) = args.file {
+            Document::open(&filename).unwrap_or_default()
         } else {
             Document::default()
         };

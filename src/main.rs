@@ -1,6 +1,11 @@
+#[macro_use]
+extern crate clap;
+mod args;
 mod document;
 mod editor;
 mod terminal;
+
+use args::Args;
 use document::Document;
 use document::Row;
 use editor::Editor;
