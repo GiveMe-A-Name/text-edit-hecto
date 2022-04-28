@@ -34,6 +34,7 @@ impl Terminal {
         print!("{}", termion::clear::All);
     }
 
+    /// set cursort at pointer position
     pub fn cursor_position(Position { x, y }: &Position) {
         let x = x.saturating_add(1);
         let y = y.saturating_add(1);

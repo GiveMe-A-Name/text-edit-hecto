@@ -60,9 +60,8 @@ impl Draw for Editor {
     // | ............... |
     //     row's width
     fn draw_row(&self, row: &Row) {
-        let mut end = self.terminal.size().width as usize;
         let start = self.offset.x as usize;
-        end += start;
+        let end = self.terminal.size().width as usize + start;
         let row = row.render(start, end);
         println!("{}\r", row);
     }

@@ -27,14 +27,13 @@ impl Row {
     }
 }
 
-impl Row {}
-
 #[derive(Default)]
 pub struct Document {
     rows: Vec<Row>,
 }
 
 impl Document {
+    /// read document from file
     pub fn open(filename: &str) -> Result<Self> {
         let contents = fs::read_to_string(filename)?;
         let rows: Vec<Row> = contents
@@ -45,6 +44,8 @@ impl Document {
             .collect();
         Ok(Self { rows })
     }
+
+    /// get document's row from index
     pub fn row(&self, index: usize) -> Option<&Row> {
         self.rows.get(index)
     }
