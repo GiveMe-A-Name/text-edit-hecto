@@ -9,4 +9,5 @@ description = "a text edit by rust"
 
 [dependencies]
 termion = "1"
+unicode-segmentation = "1"
 clap = { version = "3.1.12", features = ["derive"] }

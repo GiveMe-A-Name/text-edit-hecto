@@ -118,12 +118,26 @@ impl Handle for Editor {
         } else {
             0
         } as u16;
-
+        let terminal_height = self.terminal.size().height;
         match key {
-            Key::Left => x = x.saturating_sub(1),
+            Key::Left => {
+                if x > 0 {
+                    x -= 1;
+                } else {
+                    y = y.saturating_sub(1);
+                    x = if let Some(row) = self.document.row(y.into()) {
+                        row.len() as u16
+                    } else {
+                        0
+                    };
+                }
+            }
             Key::Right => {
-                if x < width {
-                    x = x.saturating_add(1)
+                if x >= width {
+                    y = y.saturating_add(1);
+                    x = 0;
+                } else {
+                    x = x.saturating_add(1);
                 }
             }
             Key::Up => y = y.saturating_sub(1),
@@ -134,8 +148,20 @@ impl Handle for Editor {
             }
             Key::Home => x = 0,
             Key::End => x = width,
-            Key::PageUp => y = 0,
-            Key::PageDown => y = height,
+            Key::PageUp => {
+                y = if y > terminal_height {
+                    y - terminal_height
+                } else {
+                    0
+                };
+            }
+            Key::PageDown => {
+                y = if y + terminal_height < height {
+                    y + terminal_height
+                } else {
+                    height
+                };
+            }
             _ => (),
         };
         self.cursor_position = Position { x, y };
