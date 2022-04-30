@@ -6,12 +6,28 @@ use crate::Terminal;
 
 use clap::StructOpt;
 use std::env;
+use std::time::Duration;
+use std::time::Instant;
 use termion::color;
 use termion::event::Key;
 
 const STATUS_FG_COLOR: color::Rgb = color::Rgb(63, 63, 63);
 const STATUS_BG_COLOR: color::Rgb = color::Rgb(239, 239, 239);
 const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+struct StatusMessage {
+    text: String,
+    time: Instant,
+}
+
+impl From<String> for StatusMessage {
+    fn from(message: String) -> Self {
+        Self {
+            time: Instant::now(),
+            text: message,
+        }
+    }
+}
 
 #[derive(Debug, Default)]
 pub struct Position {
@@ -40,6 +56,7 @@ pub struct Editor {
     cursor_position: Position,
     document: Document,
     offset: Position,
+    status_message: StatusMessage,
 }
 
 impl Draw for Editor {
@@ -124,6 +141,12 @@ impl Draw for Editor {
 
     fn draw_message_bar(&self) {
         Terminal::clear_current_line();
+        let message = &self.status_message;
+        if Instant::now() - message.time < Duration::new(5, 0) {
+            let mut text = message.text.clone();
+            text.truncate(self.terminal.size().width as usize);
+            print!("{}", text);
+        }
     }
 }
 
@@ -229,8 +252,15 @@ impl Handle for Editor {
 impl Editor {
     pub fn default() -> Self {
         let args = Args::parse();
+        let mut initial_status = String::from("HELP: Ctrl-Q = quit");
         let document = if let Some(filename) = args.file {
-            Document::open(&filename).unwrap_or_default()
+            let doc = Document::open(&filename);
+            if doc.is_ok() {
+                doc.unwrap()
+            } else {
+                initial_status = format!("ERR: Could not open file: {}", filename);
+                Document::default()
+            }
         } else {
             Document::default()
         };
@@ -241,6 +271,7 @@ impl Editor {
             cursor_position: Position::default(),
             document,
             offset: Position::default(),
+            status_message: StatusMessage::from(initial_status),
         }
     }
     pub fn run(&mut self) {
