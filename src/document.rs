@@ -42,6 +42,7 @@ impl Row {
 #[derive(Default)]
 pub struct Document {
     rows: Vec<Row>,
+    pub filename: Option<String>,
 }
 
 impl Document {
@@ -49,17 +50,33 @@ impl Document {
     pub fn open(filename: &str) -> Result<Self> {
         let contents = fs::read_to_string(filename)?;
         let rows: Vec<Row> = contents.lines().map(|line| Row::from(line)).collect();
-        Ok(Self { rows })
+        Ok(Self {
+            rows,
+            filename: Some(filename.to_string()),
+        })
     }
 
     /// get document's row from index
     pub fn row(&self, index: usize) -> Option<&Row> {
         self.rows.get(index)
     }
+
     pub fn is_empty(&self) -> bool {
         self.rows.is_empty()
     }
+
     pub fn len(&self) -> usize {
         self.rows.len()
+    }
+
+    pub fn status_bar_message(&self) -> String {
+        let file_name = if let Some(ref name) = self.filename {
+            let mut name = name.clone();
+            name.truncate(20);
+            name
+        } else {
+            "[No Name]".to_string()
+        };
+        format!("{} - {} lines", file_name, self.len())
     }
 }

@@ -3,10 +3,14 @@ use crate::Document;
 use crate::Result;
 use crate::Row;
 use crate::Terminal;
+
 use clap::StructOpt;
 use std::env;
+use termion::color;
 use termion::event::Key;
 
+const STATUS_FG_COLOR: color::Rgb = color::Rgb(63, 63, 63);
+const STATUS_BG_COLOR: color::Rgb = color::Rgb(239, 239, 239);
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(Debug, Default)]
@@ -20,6 +24,8 @@ trait Draw {
     fn draw_rows(&self);
     fn draw_row(&self, row: &Row);
     fn draw_welcome(&self);
+    fn draw_status_bar(&self);
+    fn draw_message_bar(&self);
 }
 
 trait Handle {
@@ -42,10 +48,13 @@ impl Draw for Editor {
         Terminal::cursor_position(&Position::default());
 
         if self.should_quit {
+            Terminal::flush_stdout()?;
             Terminal::clear_screen();
             println!("Goodbye!\r");
         } else {
             self.draw_rows();
+            self.draw_status_bar();
+            self.draw_message_bar();
             Terminal::cursor_position(&Position {
                 x: self.cursor_position.x.saturating_sub(self.offset.x),
                 y: self.cursor_position.y.saturating_sub(self.offset.y),
@@ -54,6 +63,20 @@ impl Draw for Editor {
 
         Terminal::cursor_show();
         Terminal::flush_stdout()
+    }
+
+    fn draw_rows(&self) {
+        let height = self.terminal.size().height;
+        for terminal_row in 0..height {
+            Terminal::clear_current_line();
+            if let Some(row) = self.document.row((terminal_row + self.offset.y) as usize) {
+                self.draw_row(row);
+            } else if terminal_row == height / 3 && self.document.is_empty() {
+                self.draw_welcome();
+            } else {
+                println!("~\r");
+            }
+        }
     }
 
     // start            end
@@ -66,20 +89,6 @@ impl Draw for Editor {
         println!("{}\r", row);
     }
 
-    fn draw_rows(&self) {
-        let height = self.terminal.size().height;
-        for terminal_row in 0..height - 1 {
-            Terminal::clear_current_line();
-            if let Some(row) = self.document.row((terminal_row + self.offset.y) as usize) {
-                self.draw_row(row);
-            } else if terminal_row == height / 3 && self.document.is_empty() {
-                self.draw_welcome();
-            } else {
-                println!("~\r");
-            }
-        }
-    }
-
     fn draw_welcome(&self) {
         let mut welcome_message = format!("Hecto edit -- version {}", VERSION);
         let len = welcome_message.len();
@@ -89,6 +98,32 @@ impl Draw for Editor {
         welcome_message = format!("~{}{}", whites, welcome_message);
         welcome_message.truncate(width);
         println!("{}\r", welcome_message);
+    }
+
+    fn draw_status_bar(&self) {
+        let mut status = self.document.status_bar_message();
+        let width = self.terminal.size().width as usize;
+        let line_indicator = format!(
+            "{}/{}",
+            self.cursor_position.y.saturating_add(1),
+            self.document.len(),
+        );
+        let len = status.len() + line_indicator.len();
+        if width > len {
+            status.push_str(&" ".repeat(width - len));
+        }
+        status = format!("{}{}", status, line_indicator);
+        status.truncate(width);
+
+        Terminal::set_bg_color(STATUS_BG_COLOR);
+        Terminal::set_fg_color(STATUS_FG_COLOR);
+        println!("{}\r", status);
+        Terminal::reset_bg_color();
+        Terminal::reset_fg_color();
+    }
+
+    fn draw_message_bar(&self) {
+        Terminal::clear_current_line();
     }
 }
 
@@ -124,17 +159,21 @@ impl Handle for Editor {
                 if x > 0 {
                     x -= 1;
                 } else {
-                    y = y.saturating_sub(1);
-                    x = if let Some(row) = self.document.row(y.into()) {
-                        row.len() as u16
-                    } else {
-                        0
-                    };
+                    if y > 0 {
+                        y -= 1;
+                        x = if let Some(row) = self.document.row(y.into()) {
+                            row.len() as u16
+                        } else {
+                            0
+                        };
+                    }
                 }
             }
             Key::Right => {
                 if x >= width {
-                    y = y.saturating_add(1);
+                    if y < height {
+                        y = y + 1;
+                    }
                     x = 0;
                 } else {
                     x = x.saturating_add(1);
