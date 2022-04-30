@@ -118,7 +118,7 @@ impl Draw for Editor {
     }
 
     fn draw_status_bar(&self) {
-        let mut status = self.document.status_bar_message();
+        let mut status = self.document.status_bar_text();
         let width = self.terminal.size().width as usize;
         let line_indicator = format!(
             "{}/{}",

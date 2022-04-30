@@ -69,7 +69,7 @@ impl Document {
         self.rows.len()
     }
 
-    pub fn status_bar_message(&self) -> String {
+    pub fn status_bar_text(&self) -> String {
         let file_name = if let Some(ref name) = self.filename {
             let mut name = name.clone();
             name.truncate(20);
