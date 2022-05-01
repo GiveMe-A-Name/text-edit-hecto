@@ -155,6 +155,14 @@ impl Handle for Editor {
         let pressed_key = Terminal::read_key()?;
         match pressed_key {
             Key::Ctrl('q') => self.should_quit = true,
+            Key::Ctrl('s') => {
+                if self.document.save().is_ok() {
+                    self.status_message =
+                        StatusMessage::from("File saved successfully.".to_string());
+                } else {
+                    self.status_message = StatusMessage::from("Error writing file!".to_string());
+                }
+            }
             Key::Char(c) => {
                 self.document.insert(&self.cursor_position, c);
                 self.move_cursor(&Key::Right);
@@ -263,7 +271,7 @@ impl Handle for Editor {
 impl Editor {
     pub fn default() -> Self {
         let args = Args::parse();
-        let mut initial_status = String::from("HELP: Ctrl-Q = quit");
+        let mut initial_status = String::from("HELP: Ctrl-Q = quit | Ctrl-S = save ");
         let document = if let Some(filename) = args.file {
             let doc = Document::open(&filename);
             if doc.is_ok() {

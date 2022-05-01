@@ -2,6 +2,7 @@ use crate::Position;
 use crate::Result;
 use crate::Row;
 use std::fs;
+use std::io::Write;
 
 #[derive(Default)]
 pub struct Document {
@@ -84,5 +85,17 @@ impl Document {
         if let Some(row) = self.rows.get_mut(y) {
             row.delete(x);
         }
+    }
+
+    /// save doc into disk
+    pub fn save(&self) -> Result<()> {
+        if let Some(ref filename) = self.filename {
+            let mut file = fs::File::create(filename)?;
+            for row in self.rows.iter() {
+                file.write_all(row.as_bytes())?;
+                file.write_all(b"\n")?;
+            }
+        }
+        Ok(())
     }
 }
