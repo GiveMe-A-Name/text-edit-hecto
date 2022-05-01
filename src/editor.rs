@@ -155,6 +155,10 @@ impl Handle for Editor {
         let pressed_key = Terminal::read_key()?;
         match pressed_key {
             Key::Ctrl('q') => self.should_quit = true,
+            Key::Char(c) => {
+                self.document.insert(&self.cursor_position, c);
+                self.move_cursor(&Key::Right);
+            }
             Key::Up
             | Key::Down
             | Key::Left

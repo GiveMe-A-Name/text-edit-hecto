@@ -1,3 +1,4 @@
+use crate::Position;
 use crate::Result;
 use crate::Row;
 use std::fs;
@@ -41,5 +42,16 @@ impl Document {
             "[No Name]".to_string()
         };
         format!("{} - {} lines", file_name, self.len())
+    }
+
+    pub fn insert(&mut self, position: &Position, ch: char) {
+        let (x, y) = (position.x as usize, position.y as usize);
+        if let Some(row) = self.rows.get_mut(y) {
+            row.insert(x, ch);
+        } else {
+            let mut row = Row::default();
+            row.insert(x, ch);
+            self.rows.push(row);
+        }
     }
 }
