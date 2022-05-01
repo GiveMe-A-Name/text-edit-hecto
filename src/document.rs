@@ -44,7 +44,31 @@ impl Document {
         format!("{} - {} lines", file_name, self.len())
     }
 
+    pub fn insert_newline(&mut self, position: &Position) {
+        let (x, y) = (position.x as usize, position.y as usize);
+        if y > self.len() {
+            return;
+        }
+        // if y >= self.len() {
+        //     self.rows.push(new_row);
+        // } else {
+
+        //     self.rows.insert(y + 1, new_row);
+        // }
+        if let Some(row) = self.rows.get_mut(y) {
+            let new_row = row.split(x);
+            self.rows.insert(y + 1, new_row);
+        } else {
+            let new_row = Row::default();
+            self.rows.push(new_row);
+        }
+    }
+
     pub fn insert(&mut self, position: &Position, ch: char) {
+        if ch == '\n' {
+            self.insert_newline(position);
+            return;
+        }
         let (x, y) = (position.x as usize, position.y as usize);
         if let Some(row) = self.rows.get_mut(y) {
             row.insert(x, ch);

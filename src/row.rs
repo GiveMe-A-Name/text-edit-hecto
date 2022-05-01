@@ -65,4 +65,12 @@ impl Row {
         }
         self.update_len();
     }
+
+    pub fn split(&mut self, at: usize) -> Self {
+        let benning: String = self.content[..].graphemes(true).take(at).collect();
+        let remainer: String = self.content[..].graphemes(true).skip(at).collect();
+        self.content = benning;
+        self.update_len();
+        Row::from(&remainer[..])
+    }
 }
