@@ -54,4 +54,11 @@ impl Document {
             self.rows.push(row);
         }
     }
+
+    pub fn delete(&mut self, position: &Position) {
+        let (x, y) = (position.x as usize, position.y as usize);
+        if let Some(row) = self.rows.get_mut(y) {
+            row.delete(x);
+        }
+    }
 }
