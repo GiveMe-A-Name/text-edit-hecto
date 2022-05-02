@@ -1,3 +1,4 @@
+#![warn(clippy::all, clippy::pedantic, clippy::restriction)]
 #[macro_use]
 extern crate clap;
 mod args;
