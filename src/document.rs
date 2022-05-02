@@ -1,3 +1,5 @@
+use termion::style::Bold;
+
 use crate::Position;
 use crate::Result;
 use crate::Row;
@@ -8,6 +10,7 @@ use std::io::Write;
 pub struct Document {
     rows: Vec<Row>,
     pub filename: Option<String>,
+    dirty: bool,
 }
 
 impl Document {
@@ -17,6 +20,7 @@ impl Document {
         let rows: Vec<Row> = contents.lines().map(|line| Row::from(line)).collect();
         Ok(Self {
             rows,
+            dirty: false,
             filename: Some(filename.to_string()),
         })
     }
@@ -35,6 +39,7 @@ impl Document {
     }
 
     pub fn status_bar_text(&self) -> String {
+        let modified_indicator = if self.dirty { " (modified)" } else { "" };
         let file_name = if let Some(ref name) = self.filename {
             let mut name = name.clone();
             name.truncate(20);
@@ -42,20 +47,11 @@ impl Document {
         } else {
             "[No Name]".to_string()
         };
-        format!("{} - {} lines", file_name, self.len())
+        format!("{} - {} lines{}", file_name, self.len(), modified_indicator)
     }
 
     pub fn insert_newline(&mut self, position: &Position) {
         let (x, y) = (position.x as usize, position.y as usize);
-        if y > self.len() {
-            return;
-        }
-        // if y >= self.len() {
-        //     self.rows.push(new_row);
-        // } else {
-
-        //     self.rows.insert(y + 1, new_row);
-        // }
         if let Some(row) = self.rows.get_mut(y) {
             let new_row = row.split(x);
             self.rows.insert(y + 1, new_row);
@@ -66,6 +62,10 @@ impl Document {
     }
 
     pub fn insert(&mut self, position: &Position, ch: char) {
+        if position.y as usize > self.len() {
+            return;
+        }
+        self.dirty = true;
         if ch == '\n' {
             self.insert_newline(position);
             return;
@@ -88,13 +88,14 @@ impl Document {
     }
 
     /// save doc into disk
-    pub fn save(&self) -> Result<()> {
+    pub fn save(&mut self) -> Result<()> {
         if let Some(ref filename) = self.filename {
             let mut file = fs::File::create(filename)?;
             for row in self.rows.iter() {
                 file.write_all(row.as_bytes())?;
                 file.write_all(b"\n")?;
             }
+            self.dirty = false;
         }
         Ok(())
     }
