@@ -24,12 +24,12 @@ impl Editor {
             }
             Key::Char(c) => {
                 self.document.insert(&self.cursor_position, c);
-                self.move_cursor(&Key::Right);
+                self.move_cursor(Key::Right);
             }
             Key::Delete => self.document.delete(&self.cursor_position),
             Key::Backspace => {
                 if self.cursor_position.x > 0 || self.cursor_position.y > 0 {
-                    self.move_cursor(&Key::Left);
+                    self.move_cursor(Key::Left);
                     self.document.delete(&self.cursor_position);
                 }
             }
@@ -40,7 +40,7 @@ impl Editor {
             | Key::Home
             | Key::End
             | Key::PageDown
-            | Key::PageUp => self.move_cursor(&pressed_key),
+            | Key::PageUp => self.move_cursor(pressed_key),
             _ => (),
         }
         if self.quit_times < QUIT_TIMES {
@@ -50,14 +50,14 @@ impl Editor {
         Ok(())
     }
 
-    fn move_cursor(&mut self, key: &Key) {
+    fn move_cursor(&mut self, key: Key) {
         let Position { mut x, mut y } = self.cursor_position;
         let height = self.document.len() as u16;
         let width = if let Some(row) = self.document.row(y.into()) {
-            row.len()
+            row.len() as u16
         } else {
             0
-        } as u16;
+        };
         let terminal_height = self.terminal.size().height;
         match key {
             Key::Left => {
@@ -85,7 +85,7 @@ impl Editor {
             Key::Up => y = y.saturating_sub(1),
             Key::Down => {
                 if y < height {
-                    y = y.saturating_add(1)
+                    y = y.saturating_add(1);
                 }
             }
             Key::Home => x = 0,

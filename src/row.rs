@@ -57,12 +57,11 @@ impl Row {
     pub fn delete(&mut self, at: usize) {
         if at >= self.len() {
             return;
-        } else {
-            let mut update_content: String = self.content[..].graphemes(true).take(at).collect();
-            let remainer: String = self.content[..].graphemes(true).skip(at + 1).collect();
-            update_content.push_str(&remainer);
-            self.content = update_content;
         }
+        let mut update_content: String = self.content[..].graphemes(true).take(at).collect();
+        let remainer: String = self.content[..].graphemes(true).skip(at + 1).collect();
+        update_content.push_str(&remainer);
+        self.content = update_content;
         self.update_len();
     }
 
@@ -71,7 +70,7 @@ impl Row {
         let remainer: String = self.content[..].graphemes(true).skip(at).collect();
         self.content = benning;
         self.update_len();
-        Row::from(&remainer[..])
+        return Row::from(remainer.as_str());
     }
 
     pub fn as_bytes(&self) -> &[u8] {

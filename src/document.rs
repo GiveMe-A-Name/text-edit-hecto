@@ -60,7 +60,8 @@ impl Document {
     }
 
     pub fn insert(&mut self, position: &Position, ch: char) {
-        if position.y as usize > self.len() {
+        let (x, y) = (position.x as usize, position.y as usize);
+        if y > self.len() {
             return;
         }
         self.dirty = true;
@@ -68,7 +69,6 @@ impl Document {
             self.insert_newline(position);
             return;
         }
-        let (x, y) = (position.x as usize, position.y as usize);
         if let Some(row) = self.rows.get_mut(y) {
             row.insert(x, ch);
         } else {
@@ -89,7 +89,7 @@ impl Document {
     pub fn save(&mut self) -> Result<()> {
         if let Some(ref filename) = self.filename {
             let mut file = fs::File::create(filename)?;
-            for row in self.rows.iter() {
+            for row in &self.rows {
                 file.write_all(row.as_bytes())?;
                 file.write_all(b"\n")?;
             }
