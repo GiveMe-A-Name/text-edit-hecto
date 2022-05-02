@@ -47,6 +47,7 @@ impl Terminal {
         io::stdout().flush()
     }
 
+    /// read key from keborad
     pub fn read_key() -> Result<Key> {
         loop {
             if let Some(key) = io::stdin().lock().keys().next() {

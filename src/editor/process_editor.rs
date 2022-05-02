@@ -10,14 +10,7 @@ impl Editor {
         let pressed_key = Terminal::read_key()?;
         match pressed_key {
             Key::Ctrl('q') => self.should_quit = true,
-            Key::Ctrl('s') => {
-                if self.document.save().is_ok() {
-                    self.status_message =
-                        StatusMessage::from("File saved successfully.".to_string());
-                } else {
-                    self.status_message = StatusMessage::from("Error writing file!".to_string());
-                }
-            }
+            Key::Ctrl('s') => self.save(),
             Key::Char(c) => {
                 self.document.insert(&self.cursor_position, c);
                 self.move_cursor(&Key::Right);
@@ -119,6 +112,55 @@ impl Editor {
             offset.x = x;
         } else if x >= offset.x.saturating_add(width) {
             offset.x = x.saturating_sub(width).saturating_add(1);
+        }
+    }
+
+    fn prompt(&mut self, prompt: &str) -> Result<Option<String>> {
+        let mut result = String::new();
+        loop {
+            self.status_message = StatusMessage::from(format!("{}{}", prompt, result));
+            self.refresh_screen()?;
+            match Terminal::read_key()? {
+                Key::Char('\n') => break,
+                Key::Char(c) => {
+                    if !c.is_control() {
+                        result.push(c);
+                    }
+                }
+                Key::Backspace => {
+                    if !result.is_empty() {
+                        result.truncate(result.len() - 1);
+                    }
+                }
+                Key::Esc => {
+                    result.truncate(0);
+                    break;
+                }
+                _ => (),
+            }
+        }
+        if result.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(result))
+        }
+    }
+
+    fn save(&mut self) {
+        if self.document.filename.is_none() {
+            let new_filename = self.prompt("Save as: ").unwrap_or(None);
+            match new_filename {
+                Some(filename) => self.document.filename = Some(filename),
+                None => {
+                    self.status_message = StatusMessage::from("Save aborted.".to_string());
+                    return;
+                }
+            }
+        }
+        if self.document.save().is_ok() {
+            self.status_message = StatusMessage::from("File saved successfully.".to_string());
+        } else {
+            self.status_message = StatusMessage::from("Error writing file!".to_string());
         }
     }
 }
