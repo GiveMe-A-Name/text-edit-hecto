@@ -45,8 +45,8 @@ impl Editor {
         let mut initial_status = String::from("HELP: Ctrl-Q = quit | Ctrl-S = save ");
         let document = if let Some(filename) = args.file {
             let doc = Document::open(&filename);
-            if doc.is_ok() {
-                doc.unwrap()
+            if let Ok(doc) = doc {
+                doc
             } else {
                 initial_status = format!("ERR: Could not open file: {}", filename);
                 Document::default()

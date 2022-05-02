@@ -1,5 +1,3 @@
-use termion::style::Bold;
-
 use crate::Position;
 use crate::Result;
 use crate::Row;
@@ -17,7 +15,7 @@ impl Document {
     /// read document from file
     pub fn open(filename: &str) -> Result<Self> {
         let contents = fs::read_to_string(filename)?;
-        let rows: Vec<Row> = contents.lines().map(|line| Row::from(line)).collect();
+        let rows: Vec<Row> = contents.lines().map(Row::from).collect();
         Ok(Self {
             rows,
             dirty: false,

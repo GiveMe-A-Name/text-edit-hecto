@@ -10,8 +10,18 @@ impl Editor {
     pub fn process_keypress(&mut self) -> Result<()> {
         let pressed_key = Terminal::read_key()?;
         match pressed_key {
-            Key::Ctrl('q') => return Ok(self.quit()),
-            Key::Ctrl('s') => return Ok(self.save()),
+            Key::Ctrl('q') => {
+                return {
+                    self.quit();
+                    Ok(())
+                }
+            }
+            Key::Ctrl('s') => {
+                return {
+                    self.save();
+                    Ok(())
+                }
+            }
             Key::Char(c) => {
                 self.document.insert(&self.cursor_position, c);
                 self.move_cursor(&Key::Right);
@@ -53,21 +63,19 @@ impl Editor {
             Key::Left => {
                 if x > 0 {
                     x -= 1;
-                } else {
-                    if y > 0 {
-                        y -= 1;
-                        x = if let Some(row) = self.document.row(y.into()) {
-                            row.len() as u16
-                        } else {
-                            0
-                        };
-                    }
+                } else if y > 0 {
+                    y -= 1;
+                    x = if let Some(row) = self.document.row(y.into()) {
+                        row.len() as u16
+                    } else {
+                        0
+                    };
                 }
             }
             Key::Right => {
                 if x >= width {
                     if y < height {
-                        y = y + 1;
+                        y += 1;
                     }
                     x = 0;
                 } else {
@@ -169,7 +177,7 @@ impl Editor {
         }
     }
 
-    fn quit(&mut self) -> () {
+    fn quit(&mut self) {
         if self.document.is_dirty() && self.quit_times > 0 {
             self.status_message = StatusMessage::from(format!(
                 "WARNING! File has unsaved changes. Press Ctrl-Q {} more times to quit.",
