@@ -99,4 +99,8 @@ impl Document {
         }
         Ok(())
     }
+
+    pub fn is_dirty(&self) -> bool {
+        self.dirty
+    }
 }

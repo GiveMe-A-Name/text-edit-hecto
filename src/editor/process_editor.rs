@@ -1,5 +1,6 @@
 use super::Position;
 use super::StatusMessage;
+use super::QUIT_TIMES;
 use crate::Editor;
 use crate::Result;
 use crate::Terminal;
@@ -9,8 +10,8 @@ impl Editor {
     pub fn process_keypress(&mut self) -> Result<()> {
         let pressed_key = Terminal::read_key()?;
         match pressed_key {
-            Key::Ctrl('q') => self.should_quit = true,
-            Key::Ctrl('s') => self.save(),
+            Key::Ctrl('q') => return Ok(self.quit()),
+            Key::Ctrl('s') => return Ok(self.save()),
             Key::Char(c) => {
                 self.document.insert(&self.cursor_position, c);
                 self.move_cursor(&Key::Right);
@@ -31,6 +32,10 @@ impl Editor {
             | Key::PageDown
             | Key::PageUp => self.move_cursor(&pressed_key),
             _ => (),
+        }
+        if self.quit_times < QUIT_TIMES {
+            self.quit_times = QUIT_TIMES;
+            self.status_message = StatusMessage::from(String::new());
         }
         Ok(())
     }
@@ -161,6 +166,18 @@ impl Editor {
             self.status_message = StatusMessage::from("File saved successfully.".to_string());
         } else {
             self.status_message = StatusMessage::from("Error writing file!".to_string());
+        }
+    }
+
+    fn quit(&mut self) -> () {
+        if self.document.is_dirty() && self.quit_times > 0 {
+            self.status_message = StatusMessage::from(format!(
+                "WARNING! File has unsaved changes. Press Ctrl-Q {} more times to quit.",
+                self.quit_times
+            ));
+            self.quit_times -= 1;
+        } else {
+            self.should_quit = true;
         }
     }
 }

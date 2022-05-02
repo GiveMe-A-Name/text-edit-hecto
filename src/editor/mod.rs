@@ -1,11 +1,13 @@
 mod draw_editor;
 mod process_editor;
+
 use crate::Args;
 use crate::Document;
 use crate::Terminal;
+use clap::StructOpt;
 use std::time::Instant;
 
-use clap::StructOpt;
+const QUIT_TIMES: u8 = 3;
 
 #[derive(Debug, Default)]
 pub struct Position {
@@ -34,6 +36,7 @@ pub struct Editor {
     document: Document,
     offset: Position,
     status_message: StatusMessage,
+    quit_times: u8,
 }
 
 impl Editor {
@@ -59,6 +62,7 @@ impl Editor {
             document,
             offset: Position::default(),
             status_message: StatusMessage::from(initial_status),
+            quit_times: QUIT_TIMES,
         }
     }
     pub fn run(&mut self) {
