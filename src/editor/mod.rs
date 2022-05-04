@@ -9,7 +9,7 @@ use std::time::Instant;
 
 const QUIT_TIMES: u8 = 3;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Position {
     pub x: u16,
     pub y: u16,

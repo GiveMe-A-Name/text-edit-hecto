@@ -22,7 +22,7 @@ impl Editor {
                     Ok(())
                 }
             }
-            Key::Ctrl('f') => self.find()?,
+            Key::Ctrl('f') => self.search(),
             Key::Char(c) => {
                 self.document.insert(&self.cursor_position, c);
                 self.move_cursor(Key::Right);
@@ -51,21 +51,25 @@ impl Editor {
         Ok(())
     }
 
-    fn find(&mut self) -> Result<()> {
-        if let Some(query) = self.prompt("Search: ", |editor, _, query| {
-            if let Some(position) = editor.document.find(query) {
-                editor.cursor_position = position;
-                editor.scroll();
-            }
-        })? {
+    fn search(&mut self) {
+        let old_position = self.cursor_position.clone();
+        if let Some(query) = self
+            .prompt("Search: ", |editor, _, query| {
+                if let Some(position) = editor.document.find(query) {
+                    editor.cursor_position = position;
+                    editor.scroll();
+                }
+            })
+            .unwrap_or(None)
+        {
             if let Some(find_position) = self.document.find(query.as_str()) {
                 self.cursor_position = find_position;
                 self.status_message = StatusMessage::from(String::new())
             } else {
+                self.cursor_position = old_position;
                 self.status_message = StatusMessage::from(format!("Not found :{}.", query));
             }
         }
-        Ok(())
     }
 
     fn move_cursor(&mut self, key: Key) {
