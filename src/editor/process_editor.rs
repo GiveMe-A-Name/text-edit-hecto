@@ -22,17 +22,7 @@ impl Editor {
                     Ok(())
                 }
             }
-            Key::Ctrl('f') => {
-                if let Some(query) = self.prompt("Search: ")? {
-                    if let Some(find_position) = self.document.find(query.as_str()) {
-                        self.cursor_position = find_position;
-                        self.status_message = StatusMessage::from(String::new())
-                    } else {
-                        self.status_message = StatusMessage::from(format!("Not found :{}.", query));
-                        return Ok(());
-                    }
-                }
-            }
+            Key::Ctrl('f') => self.find()?,
             Key::Char(c) => {
                 self.document.insert(&self.cursor_position, c);
                 self.move_cursor(Key::Right);
@@ -57,6 +47,23 @@ impl Editor {
         if self.quit_times < QUIT_TIMES {
             self.quit_times = QUIT_TIMES;
             self.status_message = StatusMessage::from(String::new());
+        }
+        Ok(())
+    }
+
+    fn find(&mut self) -> Result<()> {
+        if let Some(query) = self.prompt("Search: ", |editor, _, query| {
+            if let Some(position) = editor.document.find(query) {
+                editor.cursor_position = position;
+                editor.scroll();
+            }
+        })? {
+            if let Some(find_position) = self.document.find(query.as_str()) {
+                self.cursor_position = find_position;
+                self.status_message = StatusMessage::from(String::new())
+            } else {
+                self.status_message = StatusMessage::from(format!("Not found :{}.", query));
+            }
         }
         Ok(())
     }
@@ -139,12 +146,16 @@ impl Editor {
         }
     }
 
-    fn prompt(&mut self, prompt: &str) -> Result<Option<String>> {
+    fn prompt<F>(&mut self, prompt: &str, callback: F) -> Result<Option<String>>
+    where
+        F: Fn(&mut Self, Key, &str),
+    {
         let mut result = String::new();
         loop {
             self.status_message = StatusMessage::from(format!("{}{}", prompt, result));
             self.refresh_screen()?;
-            match Terminal::read_key()? {
+            let key = Terminal::read_key()?;
+            match key {
                 Key::Char('\n') => break,
                 Key::Char(c) => {
                     if !c.is_control() {
@@ -162,6 +173,7 @@ impl Editor {
                 }
                 _ => (),
             }
+            callback(self, key, &result);
         }
         if result.is_empty() {
             Ok(None)
@@ -172,7 +184,7 @@ impl Editor {
 
     fn save(&mut self) {
         if self.document.filename.is_none() {
-            let new_filename = self.prompt("Save as: ").unwrap_or(None);
+            let new_filename = self.prompt("Save as: ", |_, _, _| {}).unwrap_or(None);
             match new_filename {
                 Some(filename) => self.document.filename = Some(filename),
                 None => {
