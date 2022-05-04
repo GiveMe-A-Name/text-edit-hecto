@@ -42,7 +42,8 @@ pub struct Editor {
 impl Editor {
     pub fn default() -> Self {
         let args = Args::parse();
-        let mut initial_status = String::from("HELP: Ctrl-Q = quit | Ctrl-S = save ");
+        let mut initial_status =
+            String::from("HELP: Ctrl-Q = quit | Ctrl-S = save | Ctrl-F = find");
         let document = if let Some(filename) = args.file {
             let doc = Document::open(&filename);
             if let Ok(doc) = doc {

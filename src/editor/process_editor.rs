@@ -22,6 +22,17 @@ impl Editor {
                     Ok(())
                 }
             }
+            Key::Ctrl('f') => {
+                if let Some(query) = self.prompt("Search: ")? {
+                    if let Some(find_position) = self.document.find(query.as_str()) {
+                        self.cursor_position = find_position;
+                        self.status_message = StatusMessage::from(String::new())
+                    } else {
+                        self.status_message = StatusMessage::from(format!("Not found :{}.", query));
+                        return Ok(());
+                    }
+                }
+            }
             Key::Char(c) => {
                 self.document.insert(&self.cursor_position, c);
                 self.move_cursor(Key::Right);

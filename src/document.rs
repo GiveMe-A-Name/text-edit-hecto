@@ -101,4 +101,16 @@ impl Document {
     pub fn is_dirty(&self) -> bool {
         self.dirty
     }
+
+    pub fn find(&self, query: &str) -> Option<Position> {
+        for (j, row) in self.rows.iter().enumerate() {
+            if let Some(i) = row.find(query) {
+                return Some(Position {
+                    x: i.try_into().unwrap(),
+                    y: j.try_into().unwrap(),
+                });
+            }
+        }
+        None
+    }
 }

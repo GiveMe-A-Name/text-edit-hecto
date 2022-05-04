@@ -76,4 +76,17 @@ impl Row {
     pub fn as_bytes(&self) -> &[u8] {
         self.content.as_bytes()
     }
+
+    pub fn find(&self, query: &str) -> Option<usize> {
+        if let Some(matching_byte_index) = self.content.find(query) {
+            for (grapheme_index, (byte_index, _)) in
+                self.content[..].grapheme_indices(true).enumerate()
+            {
+                if matching_byte_index == byte_index {
+                    return Some(grapheme_index);
+                }
+            }
+        }
+        None
+    }
 }
