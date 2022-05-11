@@ -29,9 +29,20 @@ impl Editor {
             }
             Key::Delete => self.document.delete(&self.cursor_position),
             Key::Backspace => {
-                if self.cursor_position.x > 0 || self.cursor_position.y > 0 {
+                if self.cursor_position.x > 0 && self.cursor_position.y > 0 {
                     self.move_cursor(Key::Left);
                     self.document.delete(&self.cursor_position);
+                } else if self.cursor_position.x == 0 && self.cursor_position.y > 0 {
+                    let previous_row = self
+                        .document
+                        .row(self.cursor_position.y as usize - 1)
+                        .unwrap();
+                    let new_position = Position {
+                        x: previous_row.len() as u16,
+                        y: self.cursor_position.y - 1,
+                    };
+                    self.document.delete(&self.cursor_position);
+                    self.cursor_position = new_position;
                 }
             }
             Key::Up

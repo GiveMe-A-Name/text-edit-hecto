@@ -78,8 +78,20 @@ impl Document {
         }
     }
 
+    pub fn delete_line(&mut self, position: &Position) {
+        let y = position.y as usize;
+        let current_row = self.rows.remove(y);
+        if let Some(row) = self.rows.get_mut(y - 1) {
+            row.extend(&current_row);
+        }
+    }
+
     pub fn delete(&mut self, position: &Position) {
         let (x, y) = (position.x as usize, position.y as usize);
+        if x == 0 {
+            self.delete_line(position);
+            return;
+        }
         if let Some(row) = self.rows.get_mut(y) {
             row.delete(x);
         }

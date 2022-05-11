@@ -1,7 +1,7 @@
 use std::cmp;
 use unicode_segmentation::UnicodeSegmentation;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Row {
     content: String,
     len: usize,
@@ -89,5 +89,10 @@ impl Row {
             }
         }
         None
+    }
+
+    pub fn extend(&mut self, other: &Self) {
+        self.content.push_str(other.content.as_str());
+        self.update_len();
     }
 }

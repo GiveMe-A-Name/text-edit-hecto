@@ -1,7 +1,6 @@
 hello world
 python
+
 qixuan
-js
-golang
-rust
-python
+jsgolang
+rustpython
