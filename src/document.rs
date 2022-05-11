@@ -102,14 +102,16 @@ impl Document {
         self.dirty
     }
 
-    pub fn find(&self, query: &str) -> Option<Position> {
-        for (j, row) in self.rows.iter().enumerate() {
-            if let Some(i) = row.find(query) {
+    pub fn find(&self, query: &str, after: &Position) -> Option<Position> {
+        let mut x = after.x as usize;
+        for (j, row) in self.rows.iter().enumerate().skip(after.y as usize) {
+            if let Some(i) = row.find(query, x) {
                 return Some(Position {
                     x: i.try_into().unwrap(),
                     y: j.try_into().unwrap(),
                 });
             }
+            x = 0
         }
         None
     }
