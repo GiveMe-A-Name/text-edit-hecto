@@ -1,4 +1,5 @@
 use super::Position;
+use super::SearchDirection;
 use super::StatusMessage;
 use super::QUIT_TIMES;
 use crate::Editor;
@@ -64,6 +65,7 @@ impl Editor {
 
     fn search(&mut self) {
         let old_position = self.cursor_position.clone();
+        let mut direaction = SearchDirection::Forward;
         if let Some(query) = self
             .prompt(
                 "Search (ESC to cancel, Arrows to navigate): ",
@@ -72,7 +74,12 @@ impl Editor {
                     match key {
                         Key::Right | Key::Down => {
                             editor.move_cursor(Key::Right);
+                            direaction = SearchDirection::Forward;
                             moved = true;
+                        }
+                        Key::Left | Key::Up => {
+                            direaction = SearchDirection::Backward;
+                            moved = true
                         }
                         _ => (),
                     }

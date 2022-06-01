@@ -19,6 +19,7 @@ use args::Args;
 use document::Document;
 use editor::Editor;
 use editor::Position;
+use editor::SearchDirection;
 use row::Row;
 use terminal::Terminal;
 

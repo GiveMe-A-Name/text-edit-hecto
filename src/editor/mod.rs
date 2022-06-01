@@ -9,6 +9,12 @@ use std::time::Instant;
 
 const QUIT_TIMES: u8 = 3;
 
+#[derive(Clone, Copy, PartialEq)]
+pub enum SearchDirection {
+    Forward,
+    Backward,
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct Position {
     pub x: u16,

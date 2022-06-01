@@ -1,6 +1,7 @@
 use crate::Position;
 use crate::Result;
 use crate::Row;
+use crate::SearchDirection;
 use std::fs;
 use std::io::Write;
 
@@ -114,17 +115,58 @@ impl Document {
         self.dirty
     }
 
-    pub fn find(&self, query: &str, after: &Position) -> Option<Position> {
-        let mut x = after.x as usize;
-        for (j, row) in self.rows.iter().enumerate().skip(after.y as usize) {
-            if let Some(i) = row.find(query, x) {
-                return Some(Position {
-                    x: i.try_into().unwrap(),
-                    y: j.try_into().unwrap(),
-                });
-            }
-            x = 0
+    pub fn find(
+        &self,
+        query: &str,
+        after: &Position,
+        direaction: SearchDirection,
+    ) -> Option<Position> {
+        if after.y as usize >= self.rows.len() {
+            return None;
         }
+        let (mut position_x, mut position_y) = (after.x as usize, after.y as usize);
+
+        let start = if direaction == SearchDirection::Forward {
+            after.y as usize
+        } else {
+            0
+        };
+        let end = if direaction == SearchDirection::Forward {
+            self.rows.len()
+        } else {
+            after.y.saturating_add(1) as usize
+        };
+
+        for _ in start..end {
+            if let Some(row) = self.rows.get(position_y) {
+                if let Some(x) = row.find(query, position_x, direaction) {
+                    position_x = x;
+                    return Some(Position {
+                        x: position_x as u16,
+                        y: position_y as u16,
+                    });
+                }
+                if direaction == SearchDirection::Forward {
+                    position_y = after.y.saturating_add(1) as usize;
+                    position_x = 0;
+                } else {
+                    position_y = after.y.saturating_sub(1) as usize;
+                    position_x = self.rows[position_y].len();
+                }
+            } else {
+                return None;
+            }
+        }
+        // let mut x = after.x as usize;
+        // for (j, row) in self.rows.iter().enumerate().skip(after.y as usize) {
+        //     if let Some(i) = row.find(query, x) {
+        //         return Some(Position {
+        //             x: i.try_into().unwrap(),
+        //             y: j.try_into().unwrap(),
+        //         });
+        //     }
+        //     x = 0
+        // }
         None
     }
 }
